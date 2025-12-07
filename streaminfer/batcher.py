@@ -54,6 +54,8 @@ class AdaptiveBatcher:
 
     async def start(self):
         """Start the background flush loop."""
+        if self._running:
+            return  # already started
         self._running = True
         self._task = asyncio.create_task(self._flush_loop())
 
