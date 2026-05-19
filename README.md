@@ -100,6 +100,22 @@ ruff check streaminfer tests
 
 Current local verification: `24 passed` and `ruff` clean.
 
+Live smoke test:
+
+```bash
+STREAMINFER_PORT=8010 python -m streaminfer.server
+curl http://127.0.0.1:8010/health
+curl -X POST http://127.0.0.1:8010/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"mlops"}'
+curl -X POST http://127.0.0.1:8010/api/reload \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"upper"}'
+```
+
+Current local smoke test: `/health`, `/predict`, `/api/reload`, and `/metrics` all
+responded successfully.
+
 ## Limitations
 
 - Demo models are intentionally simple.
