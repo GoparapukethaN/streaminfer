@@ -94,23 +94,15 @@ All settings use environment variables with the `STREAMINFER_` prefix.
 python -m venv .venv
 . .venv/bin/activate
 pip install -e ".[dev]"
-pytest tests -q
-ruff check streaminfer tests
+make verify
 ```
 
-Current local verification: `24 passed` and `ruff` clean.
+Current local verification: `24 passed`, `ruff` clean, and the live smoke test passes.
 
 Live smoke test:
 
 ```bash
-STREAMINFER_PORT=8010 python -m streaminfer.server
-curl http://127.0.0.1:8010/health
-curl -X POST http://127.0.0.1:8010/predict \
-  -H 'Content-Type: application/json' \
-  -d '{"text":"mlops"}'
-curl -X POST http://127.0.0.1:8010/api/reload \
-  -H 'Content-Type: application/json' \
-  -d '{"model":"upper"}'
+PYTHON=.venv/bin/python ./scripts/smoke-local.sh
 ```
 
 Current local smoke test: `/health`, `/predict`, `/api/reload`, and `/metrics` all
