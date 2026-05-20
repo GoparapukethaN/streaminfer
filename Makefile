@@ -1,4 +1,4 @@
-.PHONY: verify ci-local test lint smoke
+.PHONY: verify ci-local test lint smoke docker-check
 
 PYTHON ?= python
 
@@ -14,3 +14,6 @@ lint:
 
 smoke:
 	./scripts/smoke-local.sh
+
+docker-check:
+	./scripts/smoke-docker.sh

@@ -73,6 +73,12 @@ docker build -t streaminfer .
 docker run -p 8000:8000 streaminfer
 ```
 
+Repeatable container smoke check:
+
+```bash
+make docker-check
+```
+
 ## Configuration
 
 All settings use environment variables with the `STREAMINFER_` prefix.
@@ -116,6 +122,9 @@ PYTHON=.venv/bin/python ./scripts/smoke-local.sh
 
 Local smoke test from 2026-05-20: `/health`, `/predict`, `/api/reload`, and `/metrics`
 all responded successfully.
+
+Docker smoke test from 2026-05-20: image build, container health check, `/health`,
+`/predict`, `/api/reload`, and `/metrics` all passed through `make docker-check`.
 
 The repeatable verification checklist is tracked in [docs/verification.md](docs/verification.md).
 

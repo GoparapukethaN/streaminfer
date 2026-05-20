@@ -19,10 +19,27 @@ Current local result from 2026-05-20:
 - `40 passed`
 - `ruff` clean
 - live smoke test passed against a temporary local server
+- Docker smoke test passed against a temporary container
 
 `make verify` runs unit tests, lint, and `scripts/smoke-local.sh`. The smoke script starts
 the FastAPI app, checks `/health`, exercises `/predict`, reloads the model through
 `/api/reload`, verifies the reloaded prediction behavior, and checks `/metrics`.
+
+## Docker Smoke
+
+```bash
+make docker-check
+```
+
+Current container result from 2026-05-20:
+
+- image build passed
+- container health check reached `healthy`
+- `/health` returned the default `echo` model
+- `/predict` returned the echo result
+- `/api/reload` switched the model to `upper`
+- `/predict` returned the upper-case result after reload
+- `/metrics` recorded requests and the active model name
 
 ## Load Check
 
