@@ -96,7 +96,7 @@ All settings use environment variables with the `STREAMINFER_` prefix.
 
 | Endpoint | Method | Description |
 | -------- | ------ | ----------- |
-| `/ws` | WebSocket | Streaming inference |
+| `/ws` | WebSocket | Request/response inference through the batcher |
 | `/predict` | POST | Single request/response through the batcher |
 | `/metrics` | GET | Service metrics as JSON |
 | `/api/reload` | POST | Hot-swap demo model: `{"model": "upper"}` |
