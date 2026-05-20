@@ -10,10 +10,11 @@ Python.
 
 ## What It Does
 
-- **WebSocket streaming:** clients send JSON payloads and receive predictions.
-- **HTTP prediction:** `/predict` uses the same batching path as streaming requests.
+- **WebSocket request/response:** connected clients send JSON payloads and receive predictions.
+- **HTTP prediction:** `/predict` uses the same batching path as WebSocket requests.
 - **Adaptive batching:** requests flush when the batch is full or a timeout is reached.
-- **Backpressure:** per-client rate limits and queue-depth checks protect the service.
+- **Backpressure:** HTTP and WebSocket clients use per-client rate limits and
+  pending-request checks before entering the batcher.
 - **Model hot-swap:** switch between simple demo models through an API call or SIGHUP.
 - **Metrics:** in-memory counters are exposed at `/metrics`.
 - **Load-test reports:** local WebSocket load tests can write JSON latency/throughput
@@ -27,7 +28,7 @@ Python.
 
 ```mermaid
 flowchart LR
-    WS["WebSocket clients"] --> BP["Backpressure"]
+    WS["WebSocket clients"] --> BP["Rate limits and pending-request guard"]
     HTTP["POST /predict"] --> BP
     BP --> Batch["Adaptive batcher"]
     Batch --> Model["Model holder"]
@@ -104,7 +105,7 @@ pip install -e ".[dev]"
 make verify
 ```
 
-Last local verification (2026-05-20): `38 passed`, `ruff` clean, and the live smoke
+Last local verification (2026-05-20): `40 passed`, `ruff` clean, and the live smoke
 test passes.
 
 Live smoke test:
@@ -115,6 +116,8 @@ PYTHON=.venv/bin/python ./scripts/smoke-local.sh
 
 Local smoke test from 2026-05-20: `/health`, `/predict`, `/api/reload`, and `/metrics`
 all responded successfully.
+
+The repeatable verification checklist is tracked in [docs/verification.md](docs/verification.md).
 
 ## Load Testing
 

@@ -484,12 +484,28 @@ def _choose_recommendation(results: list[dict], *, target_p95_ms: float | None) 
     if not candidates:
         candidates = results
 
+    max_throughput = max(result["summary"]["throughput_rps"] for result in candidates)
+    throughput_floor = max_throughput * 0.97
+    near_top_throughput = [
+        result
+        for result in candidates
+        if result["summary"]["throughput_rps"] >= throughput_floor
+    ]
+    min_p95 = min(result["summary"]["latency_p95_ms"] for result in near_top_throughput)
+    p95_ceiling = min_p95 * 1.05
+    stable_candidates = [
+        result
+        for result in near_top_throughput
+        if result["summary"]["latency_p95_ms"] <= p95_ceiling
+    ]
+
     best = sorted(
-        candidates,
+        stable_candidates,
         key=lambda result: (
+            -result["batcher"]["avg_batch_size"],
+            result["timeout_ms"],
             -result["summary"]["throughput_rps"],
             result["summary"]["latency_p95_ms"],
-            -result["batcher"]["avg_batch_size"],
         ),
     )[0]
     return {

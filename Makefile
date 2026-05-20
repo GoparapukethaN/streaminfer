@@ -1,8 +1,10 @@
-.PHONY: verify test lint smoke
+.PHONY: verify ci-local test lint smoke
 
 PYTHON ?= python
 
 verify: test lint smoke
+
+ci-local: verify
 
 test:
 	$(PYTHON) -m pytest tests -q

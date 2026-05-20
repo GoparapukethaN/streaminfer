@@ -15,8 +15,8 @@
   },
   "current": {
     "config_id": "batch_size=8,timeout_ms=5",
-    "throughput_rps": 423.47,
-    "latency_p95_ms": 18.79,
+    "throughput_rps": 411.26,
+    "latency_p95_ms": 19.37,
     "avg_batch_size": 8.0,
     "errors_total": 0,
     "result_count": 6
@@ -25,18 +25,18 @@
     {
       "name": "throughput_drop_pct",
       "status": "pass",
-      "observed": 0.0,
+      "observed": 2.88,
       "threshold": 10.0,
       "baseline": 423.47,
-      "current": 423.47
+      "current": 411.26
     },
     {
       "name": "p95_latency_increase_pct",
       "status": "pass",
-      "observed": 0.0,
+      "observed": 3.09,
       "threshold": 20.0,
       "baseline": 18.79,
-      "current": 18.79
+      "current": 19.37
     },
     {
       "name": "current_errors_total",

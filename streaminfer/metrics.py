@@ -1,8 +1,8 @@
-"""Simple in-memory metrics.
+"""Simple in-memory metrics for local serving checks.
 
-No Prometheus, no StatsD, no external deps. Just counters and a /metrics
-endpoint that returns JSON. Good enough for most deployments — if you need
-more, pipe the JSON to your monitoring system.
+No Prometheus, no StatsD, no external deps. The /metrics endpoint returns JSON
+counters that are useful while testing batching, reload, and backpressure
+behavior locally.
 """
 
 from __future__ import annotations

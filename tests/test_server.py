@@ -1,11 +1,7 @@
-"""Tests for HTTP endpoints.
-
-The /predict endpoint goes through the batcher which needs an event loop,
-so we skip it here and test prediction in test_pipeline.py instead.
-Server endpoint tests focus on health, metrics, and reload.
-"""
+"""Tests for HTTP endpoints."""
 
 import pytest
+from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 
 from streaminfer.config import Settings
@@ -57,3 +53,21 @@ class TestHTTPEndpoints:
             r = await client.post("/api/reload", json={"model": "nonexistent"})
             assert r.status_code == 500
             assert "error" in r.json()["status"]
+
+    def test_predict_applies_http_backpressure_before_batching(self):
+        settings = Settings(
+            model_name="echo",
+            batch_size=1,
+            batch_timeout_ms=1,
+            rate_limit_rps=0.1,
+        )
+        app = create_app(settings)
+
+        with TestClient(app) as client:
+            response = client.post("/predict", json={"text": "mlops"})
+
+            assert response.status_code == 429
+            assert response.json()["error"] == "rate limited"
+            metrics = client.get("/metrics").json()
+            assert metrics["requests_rejected"] == 1
+            assert metrics["requests_total"] == 0

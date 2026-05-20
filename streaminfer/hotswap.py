@@ -1,13 +1,10 @@
-"""Atomic model hot-swap.
+"""Atomic demo-model hot-swap.
 
-The idea is simple: load the new model in a background thread, then swap
-the pointer under a lock. In-flight requests finish with the old model,
-new requests get the new one. No downtime.
+The server loads the requested model, then swaps the model pointer under a
+lock. In-flight requests that already captured the old model finish normally,
+and later requests see the new model version.
 
-Trigger a swap by:
-  1. Sending SIGHUP to the process
-  2. POST to /api/reload
-  3. Dropping a new config file (if using config_path)
+Trigger a swap by sending SIGHUP to the process or by POSTing to /api/reload.
 """
 
 from __future__ import annotations

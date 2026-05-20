@@ -1,7 +1,7 @@
-"""FastAPI server with WebSocket streaming endpoint.
+"""FastAPI server with WebSocket request/response inference.
 
 Two modes of operation:
-  1. WebSocket at /ws — for streaming clients (send JSON, get JSON back)
+  1. WebSocket at /ws — connected clients send JSON and receive JSON responses
   2. POST /predict — for simple request/response (batch internally)
 
 Plus /metrics for monitoring and /api/reload for hot-swap.
@@ -14,7 +14,7 @@ import logging
 import signal
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
 from .backpressure import ClientState
@@ -40,8 +40,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         timeout_ms=settings.batch_timeout_ms,
     )
 
-    # track connected clients for backpressure
-    clients: dict[str, ClientState] = {}
+    # track clients for rate limits and pending-request guards
+    ws_clients: dict[str, ClientState] = {}
+    http_clients: dict[str, ClientState] = {}
 
     def _handle_sighup():
         """Reload model on SIGHUP."""
@@ -61,7 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
             loop = asyncio.get_running_loop()
             loop.add_signal_handler(signal.SIGHUP, _handle_sighup)
-        except (NotImplementedError, OSError):
+        except (NotImplementedError, OSError, RuntimeError):
             pass  # windows or no SIGHUP support
 
         logger.info(
@@ -79,12 +80,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def websocket_endpoint(websocket: WebSocket):
         await websocket.accept()
         client_id = f"{websocket.client.host}:{websocket.client.port}"
-        clients[client_id] = ClientState(
+        ws_clients[client_id] = ClientState(
             rate_limit=settings.rate_limit_rps,
             max_queue=settings.max_queue_size,
         )
         metrics.record_connect()
-        client = clients[client_id]
+        client = ws_clients[client_id]
 
         try:
             while True:
@@ -118,13 +119,36 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             pass
         finally:
             metrics.record_disconnect()
-            clients.pop(client_id, None)
+            ws_clients.pop(client_id, None)
 
     @app.post("/predict")
-    async def predict(data: dict):
+    async def predict(data: dict, request: Request):
         """Simple HTTP prediction endpoint (batched internally)."""
-        result = await pipeline.predict(data)
-        return result
+        host = request.client.host if request.client else "unknown"
+        client_id = f"http:{host}"
+        client = http_clients.setdefault(
+            client_id,
+            ClientState(
+                rate_limit=settings.rate_limit_rps,
+                max_queue=settings.max_queue_size,
+            ),
+        )
+        if not client.can_accept():
+            metrics.record_rejection()
+            return JSONResponse(
+                {
+                    "error": "rate limited",
+                    "retry_after_ms": int(client.bucket.wait_time() * 1000),
+                },
+                status_code=429,
+            )
+
+        client.on_request_start()
+        try:
+            result = await pipeline.predict(data)
+            return result
+        finally:
+            client.on_request_done()
 
     @app.get("/metrics")
     async def get_metrics():

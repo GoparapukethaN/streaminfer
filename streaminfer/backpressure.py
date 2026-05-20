@@ -1,8 +1,8 @@
-"""Backpressure control for streaming clients.
+"""Backpressure control for HTTP and WebSocket clients.
 
 Two mechanisms:
   1. Token bucket rate limiter — caps per-client request rate
-  2. Queue depth limit — disconnects slow consumers before they OOM the server
+  2. Pending request guard — rejects clients with too many in-flight requests
 
 Token bucket is standard (see https://en.wikipedia.org/wiki/Token_bucket).
 We add tokens at a fixed rate and consume one per request. If the bucket

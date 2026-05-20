@@ -1,6 +1,6 @@
 import pytest
 
-from streaminfer.benchmark import render_markdown_report, run_inference_sweep
+from streaminfer.benchmark import _choose_recommendation, render_markdown_report, run_inference_sweep
 
 
 @pytest.mark.asyncio
@@ -46,3 +46,33 @@ async def test_markdown_report_includes_recommendation_and_result_table() -> Non
     assert "# StreamInfer Benchmark Sweep" in markdown
     assert "## Recommendation" in markdown
     assert "| batch_size | timeout_ms | throughput_rps | latency_p95_ms | avg_batch_size |" in markdown
+
+
+def test_recommendation_prefers_lower_timeout_when_results_are_near_tied() -> None:
+    recommendation = _choose_recommendation(
+        [
+            {
+                "batch_size": 8,
+                "timeout_ms": 5,
+                "summary": {
+                    "errors_total": 0,
+                    "throughput_rps": 409.25,
+                    "latency_p95_ms": 19.38,
+                },
+                "batcher": {"avg_batch_size": 8.0},
+            },
+            {
+                "batch_size": 8,
+                "timeout_ms": 25,
+                "summary": {
+                    "errors_total": 0,
+                    "throughput_rps": 417.36,
+                    "latency_p95_ms": 18.98,
+                },
+                "batcher": {"avg_batch_size": 8.0},
+            },
+        ],
+        target_p95_ms=None,
+    )
+
+    assert recommendation["timeout_ms"] == 5

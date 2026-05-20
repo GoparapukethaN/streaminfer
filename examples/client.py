@@ -1,4 +1,4 @@
-"""Example WebSocket client that streams text to the server.
+"""Example WebSocket client that sends text requests to the server.
 
 Usage:
     # start the server first:
@@ -40,7 +40,7 @@ async def main():
             print(f"[{latency:6.1f}ms] {text[:50]}...")
             print(f"         → {result}\n")
 
-            # simulate streaming delay
+            # simulate time between client requests
             await asyncio.sleep(0.1)
 
     print("done")

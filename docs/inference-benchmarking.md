@@ -44,6 +44,11 @@ It fails when throughput drops beyond the configured threshold, p95 latency incr
 much, or the current sweep has errors. It warns when the recommended batch/timeout pair
 or the benchmark grid changes.
 
+The recommendation intentionally treats very close local timing results as a near tie:
+configs within `3%` of the best throughput and `5%` of the best p95 latency are ranked by
+larger completed batches, then lower timeout. That keeps the sample gate from flipping on
+noise when two settings are effectively equivalent on the local machine.
+
 ## What The Synthetic Profile Does
 
 The built-in `synthetic-llm` model estimates prompt tokens with a simple whitespace
