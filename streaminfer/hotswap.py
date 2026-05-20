@@ -75,6 +75,7 @@ def load_model(name: str, path: str | None = None) -> Any:
     Built-in models:
       - "echo": returns input as-is (for testing)
       - "upper": uppercases text input (for testing)
+      - "synthetic-llm": deterministic async profile for benchmark sweeps
 
     For real models, provide a path to a .pt/.pkl file.
     """
@@ -82,6 +83,10 @@ def load_model(name: str, path: str | None = None) -> Any:
         return EchoModel()
     elif name == "upper":
         return UpperModel()
+    elif name == "synthetic-llm":
+        from .synthetic_llm import SyntheticLLMModel
+
+        return SyntheticLLMModel()
     elif path:
         return _load_from_file(path)
     else:

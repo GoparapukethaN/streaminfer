@@ -7,6 +7,7 @@ It handles: model lookup, batch processing, and metrics recording.
 from __future__ import annotations
 
 import time
+from inspect import isawaitable
 
 from .batcher import AdaptiveBatcher
 from .hotswap import ModelHolder
@@ -49,6 +50,7 @@ class InferencePipeline:
         model = self.model_holder.model
         self.metrics.record_batch(len(batch))
 
-        # model.predict can be sync or async — handle both
         result = model.predict(batch)
+        if isawaitable(result):
+            result = await result
         return result

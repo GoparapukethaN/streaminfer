@@ -78,3 +78,24 @@ class TestPipeline:
         assert r2["result"] == "AFTER"
 
         await pipeline.stop()
+
+    @pytest.mark.asyncio
+    async def test_pipeline_awaits_async_model_prediction(self):
+        class AsyncUpperModel:
+            async def predict(self, inputs: list[dict]) -> list[dict]:
+                await asyncio.sleep(0)
+                return [
+                    {"result": item["text"].upper(), "model": "async-upper"}
+                    for item in inputs
+                ]
+
+        holder = ModelHolder(model=AsyncUpperModel(), name="async-upper")
+        metrics = Metrics()
+        pipeline = InferencePipeline(holder, metrics, batch_size=2, timeout_ms=50)
+        await pipeline.start()
+
+        result = await pipeline.predict({"text": "latency budget"})
+
+        await pipeline.stop()
+
+        assert result == {"result": "LATENCY BUDGET", "model": "async-upper"}

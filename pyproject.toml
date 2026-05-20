@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "streaminfer"
 version = "0.1.0"
-description = "Local inference-serving demo with adaptive batching, backpressure, and metrics"
+description = "Local inference serving and benchmark sweeps with adaptive batching, backpressure, and metrics"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
