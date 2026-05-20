@@ -20,6 +20,8 @@ Python.
   artifacts.
 - **Benchmark sweeps:** deterministic LLM-style profile compares batch size and timeout
   settings and writes JSON/Markdown reports.
+- **Benchmark gates:** compare baseline/current sweep reports and fail on throughput,
+  p95 latency, or error regressions.
 
 ## Architecture
 
@@ -102,7 +104,7 @@ pip install -e ".[dev]"
 make verify
 ```
 
-Last local verification (2026-05-20): `27 passed`, `ruff` clean, and the live smoke
+Last local verification (2026-05-20): `38 passed`, `ruff` clean, and the live smoke
 test passes.
 
 Live smoke test:
@@ -145,6 +147,24 @@ model downloads. It is useful for comparing local serving configuration tradeoff
 catching regressions in batching behavior. See
 [docs/inference-benchmarking.md](docs/inference-benchmarking.md) and the current
 [sample report](docs/sample-inference-sweep.md).
+
+To compare a new run against a baseline:
+
+```bash
+python examples/sweep_benchmark.py \
+  --batch-sizes 1,4,8 \
+  --timeouts-ms 5,25 \
+  --concurrency 8 \
+  --baseline-json docs/sample-inference-sweep.json \
+  --output-json artifacts/inference-sweep.json \
+  --output-md artifacts/inference-sweep.md \
+  --gate-json artifacts/inference-gate.json \
+  --gate-md artifacts/inference-gate.md
+```
+
+The gate writes Markdown/JSON artifacts and exits nonzero when throughput drops more
+than `10%`, p95 latency increases more than `20%`, or current sweep errors exceed `0`.
+See the tracked [sample gate](docs/sample-inference-gate.md).
 
 ## Limitations
 

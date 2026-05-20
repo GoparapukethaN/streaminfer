@@ -1,0 +1,64 @@
+{
+  "verdict": "pass",
+  "thresholds": {
+    "max_throughput_drop_pct": 10.0,
+    "max_p95_latency_increase_pct": 20.0,
+    "max_errors_total": 0
+  },
+  "baseline": {
+    "config_id": "batch_size=8,timeout_ms=5",
+    "throughput_rps": 423.47,
+    "latency_p95_ms": 18.79,
+    "avg_batch_size": 8.0,
+    "errors_total": 0,
+    "result_count": 6
+  },
+  "current": {
+    "config_id": "batch_size=8,timeout_ms=5",
+    "throughput_rps": 423.47,
+    "latency_p95_ms": 18.79,
+    "avg_batch_size": 8.0,
+    "errors_total": 0,
+    "result_count": 6
+  },
+  "checks": [
+    {
+      "name": "throughput_drop_pct",
+      "status": "pass",
+      "observed": 0.0,
+      "threshold": 10.0,
+      "baseline": 423.47,
+      "current": 423.47
+    },
+    {
+      "name": "p95_latency_increase_pct",
+      "status": "pass",
+      "observed": 0.0,
+      "threshold": 20.0,
+      "baseline": 18.79,
+      "current": 18.79
+    },
+    {
+      "name": "current_errors_total",
+      "status": "pass",
+      "observed": 0,
+      "threshold": 0
+    },
+    {
+      "name": "recommendation_changed",
+      "status": "pass",
+      "observed": false,
+      "threshold": "same recommended config",
+      "baseline": "batch_size=8,timeout_ms=5",
+      "current": "batch_size=8,timeout_ms=5"
+    },
+    {
+      "name": "result_count_changed",
+      "status": "pass",
+      "observed": 0,
+      "threshold": 0,
+      "baseline": 6,
+      "current": 6
+    }
+  ]
+}

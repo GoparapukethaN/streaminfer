@@ -23,6 +23,27 @@ python examples/sweep_benchmark.py \
 The script writes both JSON and Markdown reports. The JSON report is easier to compare in
 automation; the Markdown report is easier to review during an interview or design walk.
 
+## Run A Gate
+
+Use the previous JSON report as a baseline when checking a new sweep:
+
+```bash
+python examples/sweep_benchmark.py \
+  --batch-sizes 1,4,8 \
+  --timeouts-ms 5,25 \
+  --concurrency 8 \
+  --baseline-json docs/sample-inference-sweep.json \
+  --output-json artifacts/inference-sweep.json \
+  --output-md artifacts/inference-sweep.md \
+  --gate-json artifacts/inference-gate.json \
+  --gate-md artifacts/inference-gate.md
+```
+
+The gate compares the recommended configuration from the baseline and current report.
+It fails when throughput drops beyond the configured threshold, p95 latency increases too
+much, or the current sweep has errors. It warns when the recommended batch/timeout pair
+or the benchmark grid changes.
+
 ## What The Synthetic Profile Does
 
 The built-in `synthetic-llm` model estimates prompt tokens with a simple whitespace
@@ -42,9 +63,11 @@ heavier backend.
 - `total_timeouts`: batches flushed by timeout instead of full batch size
 - `recommendation`: highest-throughput zero-error configuration, optionally constrained
   by a p95 target
+- `gate`: pass/warn/fail comparison between a baseline and current sweep report
 
 ## Current Sample
 
 The current sample report is tracked at
 [sample-inference-sweep.md](sample-inference-sweep.md), with the raw JSON beside it. The
+sample gate is tracked at [sample-inference-gate.md](sample-inference-gate.md). The
 numbers should be rerun on the target machine before being quoted as performance claims.
