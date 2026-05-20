@@ -158,7 +158,8 @@ The sweep uses the built-in `synthetic-llm` profile, so it runs without API keys
 model downloads. It is useful for comparing local serving configuration tradeoffs and for
 catching regressions in batching behavior. See
 [docs/inference-benchmarking.md](docs/inference-benchmarking.md) and the current
-[sample report](docs/sample-inference-sweep.md).
+[sample report](docs/sample-inference-sweep.md). The engineering story and tradeoffs are
+written up in [docs/case-study.md](docs/case-study.md).
 
 To compare a new run against a baseline:
 
