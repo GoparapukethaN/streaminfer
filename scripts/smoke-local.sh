@@ -4,7 +4,7 @@ set -euo pipefail
 PYTHON="${PYTHON:-python}"
 PORT="${STREAMINFER_SMOKE_PORT:-8010}"
 BASE_URL="http://127.0.0.1:${PORT}"
-LOG_FILE="$(mktemp "${TMPDIR:-/tmp}/streaminfer-smoke.XXXXXX.log")"
+LOG_FILE="$(mktemp "${TMPDIR:-/tmp}/streaminfer-smoke.XXXXXX")"
 
 STREAMINFER_HOST=127.0.0.1 STREAMINFER_PORT="$PORT" \
   "$PYTHON" -m streaminfer.server >"$LOG_FILE" 2>&1 &

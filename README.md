@@ -97,7 +97,8 @@ pip install -e ".[dev]"
 make verify
 ```
 
-Current local verification: `24 passed`, `ruff` clean, and the live smoke test passes.
+Last local verification (2026-05-20): `24 passed`, `ruff` clean, and the live smoke
+test passes.
 
 Live smoke test:
 
@@ -105,8 +106,8 @@ Live smoke test:
 PYTHON=.venv/bin/python ./scripts/smoke-local.sh
 ```
 
-Current local smoke test: `/health`, `/predict`, `/api/reload`, and `/metrics` all
-responded successfully.
+Local smoke test from 2026-05-20: `/health`, `/predict`, `/api/reload`, and `/metrics`
+all responded successfully.
 
 ## Limitations
 
