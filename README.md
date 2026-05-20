@@ -15,6 +15,8 @@ Python.
 - **Backpressure:** per-client rate limits and queue-depth checks protect the service.
 - **Model hot-swap:** switch between simple demo models through an API call or SIGHUP.
 - **Metrics:** in-memory counters are exposed at `/metrics`.
+- **Load-test reports:** local WebSocket load tests can write JSON latency/throughput
+  artifacts.
 
 ## Architecture
 
@@ -97,7 +99,7 @@ pip install -e ".[dev]"
 make verify
 ```
 
-Last local verification (2026-05-20): `24 passed`, `ruff` clean, and the live smoke
+Last local verification (2026-05-20): `27 passed`, `ruff` clean, and the live smoke
 test passes.
 
 Live smoke test:
@@ -108,6 +110,21 @@ PYTHON=.venv/bin/python ./scripts/smoke-local.sh
 
 Local smoke test from 2026-05-20: `/health`, `/predict`, `/api/reload`, and `/metrics`
 all responded successfully.
+
+## Load Testing
+
+```bash
+python -m streaminfer.server
+python examples/load_test.py --connections 10 --requests 20 --output artifacts/load-test.json
+```
+
+The JSON report captures configuration, successful request count, error count,
+throughput, and p50/p95/p99 latency. See [docs/load-testing.md](docs/load-testing.md) for
+the report shape and caveats.
+
+Latest local load-report check: 20 WebSocket requests completed with `0` errors and a
+JSON report written to `/tmp/streaminfer-load-test.json`. Rerun locally before quoting
+latency numbers, since they depend on the machine and current settings.
 
 ## Limitations
 

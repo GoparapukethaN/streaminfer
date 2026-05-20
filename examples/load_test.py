@@ -1,24 +1,31 @@
-"""Load test — fires N concurrent WebSocket connections at the server.
+"""Load test that fires concurrent WebSocket requests at the server.
 
 Usage:
-    python examples/load_test.py --connections 100 --requests 50
+    python examples/load_test.py --connections 100 --requests 50 --output artifacts/load-test.json
 
-Prints throughput and latency percentiles when done.
+Prints throughput and latency percentiles and can write a JSON report.
 """
 
 import argparse
 import asyncio
 import json
 import time
+from pathlib import Path
 
 import websockets
 
+from streaminfer.benchmark import summarize_load_test
 
-async def run_client(client_id: int, n_requests: int, results: list):
+
+async def run_client(
+    *,
+    client_id: int,
+    n_requests: int,
+    uri: str,
+    latencies_ms: list[float],
+    errors: list[str],
+) -> None:
     """Single client that sends n_requests and records latencies."""
-    uri = "ws://localhost:8000/ws"
-    latencies = []
-
     try:
         async with websockets.connect(uri) as ws:
             for i in range(n_requests):
@@ -26,46 +33,87 @@ async def run_client(client_id: int, n_requests: int, results: list):
                 t0 = time.monotonic()
                 await ws.send(payload)
                 await ws.recv()
-                latencies.append((time.monotonic() - t0) * 1000)
+                latencies_ms.append((time.monotonic() - t0) * 1000)
     except Exception as e:
-        print(f"client {client_id} error: {e}")
-
-    results.extend(latencies)
+        errors.append(f"client {client_id}: {e}")
 
 
-async def main(n_connections: int, n_requests: int):
-    results: list[float] = []
-    t0 = time.monotonic()
+async def main(
+    *,
+    n_connections: int,
+    n_requests: int,
+    uri: str,
+    output: Path | None,
+) -> None:
+    latencies_ms: list[float] = []
+    errors: list[str] = []
+    started_at = time.monotonic()
 
     tasks = [
-        run_client(i, n_requests, results) for i in range(n_connections)
+        run_client(
+            client_id=i,
+            n_requests=n_requests,
+            uri=uri,
+            latencies_ms=latencies_ms,
+            errors=errors,
+        )
+        for i in range(n_connections)
     ]
     await asyncio.gather(*tasks)
 
-    elapsed = time.monotonic() - t0
-    total = len(results)
+    elapsed_seconds = time.monotonic() - started_at
+    summary = summarize_load_test(
+        latencies_ms=latencies_ms,
+        elapsed_seconds=elapsed_seconds,
+        errors_total=len(errors),
+    )
 
-    if not results:
-        print("no results — is the server running?")
+    if not latencies_ms:
+        print("no successful requests -- is the server running?")
+        if errors:
+            print("\n".join(errors[:5]))
         return
 
-    results.sort()
-    rps = total / elapsed
+    report = {
+        "config": {
+            "uri": uri,
+            "connections": n_connections,
+            "requests_per_connection": n_requests,
+        },
+        "summary": summary.to_dict(),
+        "sample_errors": errors[:10],
+    }
 
-    print(f"\n{'='*50}")
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    print(f"\n{'=' * 50}")
     print(f"connections:  {n_connections}")
     print(f"requests:     {n_requests} per connection")
-    print(f"total:        {total} requests in {elapsed:.1f}s")
-    print(f"throughput:   {rps:.0f} req/s")
-    print(f"latency p50:  {results[len(results)//2]:.1f}ms")
-    print(f"latency p95:  {results[int(len(results)*0.95)]:.1f}ms")
-    print(f"latency p99:  {results[int(len(results)*0.99)]:.1f}ms")
-    print(f"{'='*50}\n")
+    print(f"total:        {summary.total_requests} requests in {summary.elapsed_seconds:.1f}s")
+    print(f"errors:       {summary.errors_total}")
+    print(f"throughput:   {summary.throughput_rps:.1f} req/s")
+    print(f"latency p50:  {summary.latency_p50_ms:.1f}ms")
+    print(f"latency p95:  {summary.latency_p95_ms:.1f}ms")
+    print(f"latency p99:  {summary.latency_p99_ms:.1f}ms")
+    if output:
+        print(f"report:       {output}")
+    print(f"{'=' * 50}\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--connections", type=int, default=50)
     parser.add_argument("--requests", type=int, default=20)
+    parser.add_argument("--uri", default="ws://localhost:8000/ws")
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    asyncio.run(main(args.connections, args.requests))
+    asyncio.run(
+        main(
+            n_connections=args.connections,
+            n_requests=args.requests,
+            uri=args.uri,
+            output=args.output,
+        )
+    )
